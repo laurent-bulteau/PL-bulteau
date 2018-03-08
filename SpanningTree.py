@@ -8,6 +8,13 @@ def parseListOfEdges(s):
     return out
     
 
+#fonction pour tester si un graphe est un arbre couvrant
+# edges: ensemble des paires
+# n nombre total de sommets (numérotés de 0 à n-1)
+# codes de retour:
+#  0: ok
+# -1,-2 ou -3: nombre d'arêtes incorrect (=0, <n-1, >n-1)
+#  i>0: sommet i n'est pas connecté au sommet 0
 def spanningTree(edges, n):
     def setref(s,t,ref):
         if ref[t]!=t:
@@ -48,10 +55,10 @@ def evaluator(reponse, dic):
   elif res==-3:
     return False, "Vous avez sélectionné trop d'arêtes, je suis sûr qu'il y a un cycle quelque part."
   else:
-    return False, "Le nombre d'arête est bon, mais êtes-vous sûr d'avoir bien tout connecté?<br>(Il n'y a pas de chemin entre les deux sommets entourés) <script>evaluate("+str(res)+")</script>"  
+    return False, "Le nombre d'arêtes est bon, mais êtes-vous sûr d'avoir bien tout connecté?<br>(Il n'y a pas de chemin entre les deux sommets indiqués) <script>evaluate("+str(res)+")</script>"  
+
 
 def main():
-  
   reponse={'selectEdges':'(1,3),(2,4),(6,5),(5,2),(3,4)'}
   print(reponse['selectEdges'])
   dic={'graphSize':7}

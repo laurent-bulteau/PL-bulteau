@@ -1,6 +1,6 @@
 author = Laurent Bulteau
 name= Spanning Trees
-title=Arbres Couvrants
+title=Arbres Couvrants (test)
 text==
 Dans le graphe ci-dessous, sélectionnez des arêtes de façon à former un arbre couvrant.
 
