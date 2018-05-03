@@ -16,5 +16,13 @@ directed=false
 vertexLabel=["A","B","C","D","E","F","G"]
 
 
+before=@/src/SpanningTree.py
+
 form=@/src/GraphForm.html
-evaluator=@/src/SpanningTree.py
+
+evaluator==
+#grade=(True,"Yeah") 
+grade=evaluate(response, globals())
+==
+
+
