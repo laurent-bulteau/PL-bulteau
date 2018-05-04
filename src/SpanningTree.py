@@ -2,14 +2,18 @@ def sublist(lst1, lst2):
 	return set(lst1) <= set(lst2)
 			
 def parseListOfEdges(s):
-	s=s.replace('[','(').replace(']',')')
+	s=s.replace('[','(').replace(']',')').replace(' ','')	
 	tuples = s.split('),(')
 	out = []
 	for e in tuples:
 		e=e.strip('()')
-		if e!="":
-			f = e.split(',')+['0']          
-			out.append((int(f[0]),int(f[1]), float(f[2])))
+		if e!="":			
+			try:
+				f = e.split(',')+['0']          
+				out.append((int(f[0]),int(f[1]), float(f[2])))
+			except ValueError as err:
+				print ("Error in parseListOfEdges with '"+s+"'\n tuples: "+str(tuples)+"\n e='"+str(e)+"'")
+				print (err)
 	return out
    
     
@@ -35,6 +39,8 @@ def parseSolution(reponse,dic):
 	out['n']=int(dic.get("graphSize",10))
 	out['graph']=parseListOfEdges(dic.get("edges","[]"))
 	if (not sublist(out['edges'],out['graph'])):
+		print("Selected:"+str(out['edges']))
+		print("graph:"+str(out['graph']))
 		raise ValueError("Les arêtes sélectionnées ne sont pas toutes dans le graphe d'entrée.")
 	return out
   
@@ -124,7 +130,7 @@ def isMinimumSpanningTree(graph, edges, n):
 		return False, -4
 	return True,0
 
-def evaluator(reponse, dic):
+def evaluate(reponse, dic):
   sol=parseSolution(reponse,dic)
   
   #  isSpanningTree(sol['edges'],sol['n']);
@@ -148,6 +154,6 @@ def main():
 # reponse={'selectedEdges':'(1,3),(2,4),(6,5),(5,2),(3,4),(2,6)', 'selectedVertices':''}
   reponse={'selectedEdges':'(1,3,3),(2,4,2),(6,4,1),(5,2,1),(3,4,3),(0,6,2)', 'selectedVertices':''}
   dic={'graphSize':7, 'edges':'[[1,3,3],[2,4,2],[3,0,8.33],[4,5,6],[6,5,4],[6,4,1],[5,2,1],[3,4,3],[0,6,2]]'}
-  print (str(evaluator(reponse,dic)))
+  #print (str(evaluate(reponse,dic)))
 
 main()
