@@ -1,7 +1,40 @@
+import math
 
 
 
-
+def prim (graph, n, s) :
+	dist = []
+	out=[]	
+	parent=list(range(0,n))
+	todo=list(range(0,n))
+	edges=[]
+	print("graph for BF : "+str(graph))
+	for i in range(0,n):
+		dist=dist+[0 if s==i else math.inf]	
+	for i in range(0,n):
+		prevDist=list(dist)
+		out+=[prevDist]
+		closestDist=math.inf
+		closest=-1
+		for u in todo:
+			print(i, u, closest, closestDist)
+			if prevDist[u]<closestDist:
+				closest=u 
+				closestDist=prevDist[u]
+		if closest==-1:
+			raise ValueError('Unconnected graph?') 
+		todo.remove(closest)
+		if i>0:
+			edges+=[[closest, parent[closest]]]
+		for e in graph:
+			if (e[0]==closest and e[2]<dist[e[1]]):
+				dist[e[1]] = e[2]
+				parent[e[1]]=closest
+			else:
+				if (e[1]==closest and e[2]<dist[e[0]]):
+					dist[e[0]] = e[2]								
+					parent[e[0]]=closest
+	return out, edges
 
 
 def getref(s,ref):
@@ -71,7 +104,8 @@ def isMinimumSpanningTree(graph, edges, n):
 #grade=evaluateST()
 
 
-def evaluateST():  
+def evaluateST(sol):  
+  print("Check spanning Tree")
   res, code= isSpanningTree(sol['edges'],sol['n']); 
   if res:
     return True, "Bravo!"
@@ -88,7 +122,7 @@ def evaluateST():
 
 
 
-def evaluateMST():  
+def evaluateMST(sol):  
   res, code= isMinimumSpanningTree(sol['graph'], sol['edges'],sol['n']); 
   if res:
     return True, "Bravo!"
@@ -102,6 +136,49 @@ def evaluateMST():
     return False, "Ceci est bien un arbre couvrant, mais il n'est pas de poids minimal"
   else:
     return False, "Le nombre d'arêtes est bon, mais êtes-vous sûr d'avoir bien tout connecté?<br>(Il n'y a pas de chemin entre les deux sommets entourés)"+highlightVertices([0,code])
+
+
+def listOfPrimErrors(graphSol, matrixSol, edges):
+	n=graphSol['n']
+	pr, opt = prim(graphSol['graph'], n, graphSol['s'])
+	errs=[]
+	print(pr)
+	print(matrixSol)
+	return (listOfErrors(pr, matrixSol, n), sameUndirectedEdges(opt, edges))
+
+def evaluatePrim(sol, matrixSol):  
+	print("Check spanning Tree")
+	res, code= isMinimumSpanningTree(sol['graph'], sol['edges'],sol['n']); 
+	errs, goodEdges = listOfPrimErrors(sol, matrixSol, sol['edges'])
+	msg=""
+	
+	
+	if res:		
+		msg= "L'arbre est bien un arbre couvrant minimal"
+	elif code==-1:
+		msg= "Cliquez sur les arêtes pour sélectionner celles obtenues via l'algorithme de Prim"
+	elif code==-2:
+		msg= "Vous n'avez pas sélectionné suffisament d'arêtes pour espérer pouvoir tout connecter."
+	elif code==-3:
+		msg= "Vous avez sélectionné trop d'arêtes, je suis sûr qu'il y a un cycle quelque part."
+	elif code==-4:
+		msg= "Ceci est bien un arbre couvrant, mais il n'est pas de poids minimal"
+	else:
+		msg= "Le nombre d'arêtes est bon, mais êtes-vous sûr d'avoir bien tout connecté?<br>(Il n'y a pas de chemin entre les deux sommets entourés)"+highlightVertices([0,code])
+		
+	if goodEdges:
+		msg+="<br>Les arêtes correspondent bien à l'algorithme de Prim"
+	else:
+		if res:
+			msg+=", mais les arêtes ne correspondent pas à l'algorithme de Prim"
+		res=False
+		
+	if errs!=[]:
+		msg+="<br>Il y a "+str(len(errs))+ " erreurs dans la matrice."+highlightCells(errs)
+		res=False
+	return res, msg	
+    
+
 
 def main():
 # reponse={'selectedEdges':'(1,3),(2,4),(6,5),(5,2),(3,4),(2,6)', 'selectedVertices':''}

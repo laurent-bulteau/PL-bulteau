@@ -1,0 +1,355 @@
+<div class="formElement" >
+<svg id="graphSVG" width=350 height=350 viewBox="0 0 100 100" >
+ <defs>
+    <marker id="endtriangle"
+  viewBox="0 0 10 10" refX="0" refY="5" 
+  markerUnits="strokeWidth"
+  markerWidth="4" markerHeight="3"
+  orient="auto" overflow="visible">
+    <path d="M 0 0 L 10 5 L 0 10 z" />
+    </marker>
+    <marker id="starttriangle" overflow="visible"
+  viewBox="0 0 10 10" refX="5" refY="5" 
+  markerUnits="strokeWidth"
+  markerWidth="4" markerHeight="3"
+  orient="auto">
+    <path d="M -2 5 L 8 0 L 8 10 z" />
+    </marker>
+</defs>
+ <rect width="100%" height="100%" fill="#F8F8F0" /> 
+ <g id="edges"/>
+ <g id="vertices"/>
+</svg><br>
+<input type="checkbox" name="form_txt_done" id="form_txt_done" value=1 style='display:none'>
+<input name="form_txt_selectedEdges" id="form_txt_selectedEdges"  autocomplete="off" value="" style='display:none'>
+<input name="form_txt_selectedVertices" id="form_txt_selectedVertices" autocomplete="off" value="" style='display:none'>
+</div>
+
+<style>
+.outterEdge:hover .highlight {
+   /*stroke-opacity:1 !important;*/
+}
+svg text {
+  text-anchor:middle;
+  user-select: none;  
+-moz-user-select: none;
+-webkit-user-select: none;
+-ms-user-select: none;
+}
+</style>
+<script>
+
+console.log("Parsing graph parameters ...")
+var n=getDict("{{graphSize}}",7);
+var edges=getDict("{{edges}}",[]);
+var vertexLabel=getDict("{{vertexLabel}}",[]);
+var directed=getDict("{{directed}}",false);
+var selectVertices=getDict("{{selectVertices}}", false);
+var selectEdges=getDict("{{selectEdges}}", false);
+var scaleLabels=getDict("{{scaleLabels}}", 0.3);
+console.log("... done.")
+
+var color = d3.scaleLinear()
+    .domain([0, n-1])
+    .range(["#88FF88", "#8888FF"]);
+var colorDim = d3.scaleLinear()
+    .domain([0, n-1])
+    .range(["#DDEEDD", "#DDDDEE"]);
+    
+var vertices = [];
+for (var i=0; i<n; i++) {
+    vertices.push({i:i, 
+                   x:Math.random()*90+5, 
+                   y:Math.random()*90+5,
+                   label:(i in vertexLabel? vertexLabel[i] : ""),
+                   select:false,
+                   radius:4});
+}
+
+var selectedEdges=  d3.select("#form_txt_selectedEdges").property("value"); 
+edges=edges.map(function(e){
+    var d={source:vertices[e[0]], target:vertices[e[1]], select:false, radius:1,middle:{x:0,y:0}, directed:directed};
+    d.label= (e.length>2 ? e[2] : "") ;
+    d.str='('+e.join(',')+')';
+    d.select=selectedEdges.indexOf(d.str)!=-1;
+    d.curved=false;
+    
+    return d;})
+
+edges.forEach(function(e1) {
+	edges.forEach(function(e2) {
+		if (e1.source==e2.target && e2.source==e1.target && (e1.label + e2.label != "")) {
+			e1.curved=true;
+			e2.curved=true;
+		}
+	})
+})
+draw();
+    
+    
+    
+function highlightV(i){
+  d3.select("#vertex"+i).classed("highlightSol",true)
+  updateVertexStyle();  
+}    
+function highlightE(s,t){
+  d3.select("#edge"+s+"-"+t).classed("highlightSol",true)
+  updateEdgeStyle();  
+}
+onClearSolutionHighlight(function () {
+  d3.selectAll(".highlightSol").classed("highlightSol", false);
+  updateVertexStyle();
+  updateEdgeStyle();
+});
+
+
+function updateEdgeStyle(){
+	d3
+      .selectAll(".edge.highlight")
+      .style("stroke-opacity", function(d){return d.select? 0.5 : 0.01})
+      .style("stroke", function(d){return d.select? "#88F" : "yellow"})    
+    
+	d3.selectAll(".outterEdgeLabel circle")  
+		.style("fill",function(d){return d.select? "#CCCCF8":"#FFFFF8"} )    
+	d3.selectAll(".highlightSol .edge.highlight")
+      .style("stroke-opacity", 0.6)
+		.style('stroke',  'red');
+		
+    d3.selectAll(".hover .edge.highlight")
+       .style("stroke-opacity", 1)
+    
+}
+
+function updateVertexStyle(){
+  d3.selectAll(".vertex")
+    .style("fill", function(d){return (!selectVertices ||d.select) ? color(d.i): colorDim(d.i)})  
+    .style("stroke-width", function(d){return (!selectVertices ||d.select) ? 0.6: 0.2}) 
+    .style("stroke", "black")
+    
+    
+  d3.selectAll(".vertex.highlightSol")
+    .style('stroke-width', '1px')
+    .style('stroke', 'black')
+    .style('fill', 'red');
+}
+
+function draw() {
+  
+  var curvedDirectedLink=function(e) {	
+	var r=e.target.radius+3.2; //radius of node + size of the triangle
+    var dx=e.target.x-e.source.x;
+    var dy=e.target.y-e.source.y;
+    var l=Math.sqrt(dx*dx+dy*dy);
+    
+    e.middle.x=(e.source.x+e.target.x)/2-dy/l*r*0.7;
+	e.middle.y=(e.source.y+e.target.y)/2+dx/l*r*0.7;
+    
+    
+    var c1=(e.middle.x-dx*.25)+","+(e.middle.y-dy*.25);
+    var c2=(e.middle.x+dx*.25)+","+(e.middle.y+dy*.25);
+    
+    
+    var dx2=e.target.x-(e.middle.x+dx/4);
+    var dy2=e.target.y-(e.middle.y+dy/4);
+    var l2=Math.sqrt(dx2*dx2+dy2*dy2);
+    
+    dx2=dx2*(r)/l2;
+    dy2=dy2*(r)/l2;        
+    var path = "M "+e.source.x+","+e.source.y;
+    path+=" Q "+c1+ " "+e.middle.x+","+e.middle.y;
+    path+=" Q "+c2+ " "
+    //+(e.target.x-1.5*dx2)+","+(e.target.y-1.5*dy2)+ " "
+			+(e.target.x-dx2)+","+(e.target.y-dy2);
+    return path;
+  } 
+  var curvedLink=function(e) {	
+    return curvedDirectedLink(e)+" L "+e.target.x+","+e.target.y;
+  }
+  var link=function(e){  
+	e.middle.x=(e.source.x+e.target.x)/2;
+	e.middle.y=(e.source.y+e.target.y)/2;
+	return "M "+e.source.x+","+e.source.y+" L"+e.target.x+","+e.target.y;
+  }
+  
+  var directedLink=function(e){  
+    e.middle.x=(e.source.x+e.target.x)/2;
+	e.middle.y=(e.source.y+e.target.y)/2;
+	var r=e.target.radius+3.2; //radius of node + size of the triangle
+    var dx=e.target.x-e.source.x;
+    var dy=e.target.y-e.source.y;
+    
+    var l=Math.sqrt(dx*dx+dy*dy);
+    dx=dx*(l-r)/l;
+    dy=dy*(l-r)/l;        
+    return "M "+e.source.x+","+e.source.y+" l"+dx+","+dy;
+  }
+  
+  
+  
+  var drag = d3.drag().on("drag", dragged);
+  
+  function inBounds(z) {
+    return z<5?5:(z>95?95:z)
+  }
+  function dragged(d) {
+      d.x=inBounds(d3.event.x);
+      d.y=inBounds(d3.event.y);
+      updatePositions();
+  }
+  function setCircleToTextSize(d) {
+       var b=this.getBBox();
+       var r=Math.sqrt(b.width*b.width+b.height*b.height)/2*scaleLabels; 
+       if (d.radius<r) d.radius=r;
+       var c=d3.select(this.previousSibling);
+       c.attr("r", d.radius);  
+  }
+  function edgeClick(d) {
+     d.select =!d.select;
+    // clearSolHighlights() ;
+     clearSolutionHighlight();
+     var sel=edges.filter(function(d){return d.select})
+             .map(function(d){return "("+d.source.i+","+d.target.i+","+(d.label||"0")+")"})
+             .join(",");
+   
+     d3.select("#form_txt_selectedEdges").property("value", sel); 
+     updateEdgeStyle();
+  }
+  function vertexClick(d) {
+     d.select =!d.select;
+     //clearSolHighlights(); 
+     clearSolutionHighlight();
+     var sel=vertices.filter(function(d){return d.select})
+             .map(function(d){return d.i})
+             .join(",");
+   
+     d3.select("#form_txt_selectedVertices").property("value", sel); 
+     updateVertexStyle();
+  }
+   
+   
+  function updatePositions() {
+     d3
+      .selectAll(".outterVertex")
+      .attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
+    d3
+      .selectAll(".edge.undirected.curved")
+      .attr("d", curvedLink); 
+    d3
+      .selectAll(".edge.directed.curved")
+      .attr("d", curvedDirectedLink);
+    d3
+      .selectAll(".edge.undirected.straight")
+      .attr("d", link);
+    d3
+      .selectAll(".edge.directed.straight")
+      .attr("d", directedLink);
+    d3
+      .selectAll(".outterEdgeLabel")
+      .attr("transform", function(d){
+            return "translate("+d.middle.x+","+d.middle.y+")"});      
+  }
+   
+  function setHoverClass(hover) {
+    return function(){
+      d3.select(this).classed("hover", hover);
+      updateEdgeStyle();
+    }
+  }
+//outter edge group :
+  d3.select("#edges")
+    .selectAll(".outterEdge")
+    .data(edges)
+    .enter()
+    .append("g")
+    .attr("id", function(d){return "edge"+d.source.i+"-"+d.target.i})
+    .attr("class",  "outterEdge")    
+    .on("mouseleave", setHoverClass(false))
+    .on("mouseenter", setHoverClass(true))
+    .style("cursor", (selectEdges?"pointer":"default"))
+  if (selectEdges)  
+    d3.selectAll(".outterEdge").on("click",edgeClick)
+    
+    
+// edge highlight (path):
+  d3.selectAll(".outterEdge")
+    .append("path")
+    .attr("class", function(d){return "edge highlight undirected" +(d.curved?" curved":" straight")})
+    .attr("d", link)
+    .style("fill", "none")
+    .style("stroke-width", "4")
+    
+    
+    
+// edge (path):
+  d3.selectAll(".outterEdge")
+    .append("path")
+    .attr("class", function(d){return "edge show "+(directed?"directed":"undirected") +(d.curved ?" curved":" straight")})
+    .attr("d", link)
+    .style("stroke", "black")
+    .attr("marker-end","url(#endtriangle)")
+    .style("fill", "none")
+    
+// edge label (outter group):
+  d3.selectAll(".outterEdge")
+     .filter(function(d) {return d.label})
+    .append("g")
+    .attr("class", "outterEdgeLabel")    
+  
+// edge label (background circle):
+  d3.selectAll(".outterEdgeLabel")  
+    .append("circle")    
+    .style("stroke", "none")
+    .style("fill", "#FFFFF8")    
+    .style("opacity",.9)
+    .attr("cx",0)
+    .attr("cy",0)        
+    .attr("r",function(d){return d.radius})
+  
+// edge label (text):
+  d3.selectAll(".outterEdgeLabel")  
+    .append("text")  
+    .attr("class", "edgeLabel")
+    .attr("transform","scale("+scaleLabels+")")
+    .attr("x",0)
+    .attr("y",5)    
+    .html(function (d){return d.label})
+    .style("cursor", (selectEdges?"pointer":"default"))
+    .each(setCircleToTextSize)
+    
+//vertex: outter group    
+  d3.select("#vertices")
+    .selectAll(".outterVertex")
+    .data(vertices)
+    .enter()
+    .append("g")
+    .attr("class", "outterVertex")  
+    .style("cursor", (selectVertices?"pointer":"default"))  
+    .call(drag)
+    .on("mouseover", function(){this.parentNode.appendChild(this);})
+//vertex: circle
+    .append("circle")
+    .attr("id", function(d){return "vertex"+d.i})
+    .attr("class", "vertex")
+    .attr("r", function(d){return d.radius})
+    
+  if (selectVertices)  
+    d3.selectAll(".outterVertex").on("click",vertexClick)
+    
+//vertex: label (text)
+  d3.selectAll(".outterVertex")
+    .filter(function(d){return d.label})
+    .append("text")  
+    .attr("class", "vertexLabel")
+    .attr("transform","scale("+scaleLabels+")")
+    .attr("x",0)
+    .attr("y",5)    
+    .style("cursor", (selectVertices?"pointer":"default"))
+    .html(function (d){return d.label})
+    .each(setCircleToTextSize)
+    
+  updateVertexStyle();
+  updateEdgeStyle();  
+  updatePositions();
+
+}
+</script>
