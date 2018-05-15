@@ -1,0 +1,57 @@
+
+<center>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<style>
+
+.formElement {
+	display:inline-block;
+	vertical-align:middle; 
+	margin:4px;
+}
+</style>
+<script>
+var getDict = (function() {
+  // this prevents any overhead from creating the object each time
+  var element = document.createElement('div');
+  //replace html codes like &#30; with their actual char
+  function decodeHTMLEntities (str) {
+    if(str && typeof str === 'string') {
+      // strip script/html tags
+      str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
+      str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
+      element.innerHTML = str;
+      str = element.textContent;
+      element.textContent = '';
+    }
+    return str;
+  }
+  
+  function parse(s,def) {
+    if (!s) 
+      return def;
+    var decode='{"v":'+decodeHTMLEntities(s)+'}';
+    try{
+      var out= JSON.parse(decode);  
+      console.log(out);
+      return out.v;      
+    } catch(error){
+      console.error("Error parsing Django string (this should be valid JSON):\n", decode);
+      console.error(error);     
+      return def;
+    }    
+  }
+  return parse;
+})();
+
+
+var event = new Event('clearSolutionHighlight');
+
+function clearSolutionHighlight(){
+	document.documentElement.dispatchEvent(event);
+}
+function onClearSolutionHighlight(f) {
+	document.documentElement.addEventListener('clearSolutionHighlight', f, false);
+}
+</script>
+

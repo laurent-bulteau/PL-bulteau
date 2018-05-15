@@ -13,17 +13,27 @@ Une case vide est comptée comme 0, utilisez le charactère "*" pour une valeur 
 
 directed=true
 weighted=true
-
+type=sandbox
 
 graphSize=6
 matrix = [["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]
 copyLineButton=true
 sourceVertex=0
+@ /v2/src/py/extra.py [extra.py]
 
 evaluator=@/src/py/graphs.py
 evaluator+=@/src/py/matrices.py
 evaluator+=@/src/py/shortestPaths.py
 evaluator+=
+
+import os
+files = [f for f in os.listdir('.') if os.path.isfile(f)]
+for f in files:
+	print(f)
+      
+print("done.")      
+import extra
+
 
 
 
@@ -31,5 +41,9 @@ evaluator+=
 grade=evaluateBF(readSolution(), readIntMatrix(valueForBlank))
 
 ==
+
+
+
+
 
 

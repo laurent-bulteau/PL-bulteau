@@ -104,24 +104,18 @@ def sameUndirectedEdges(s,t):
 
 def generateRandomGraph(n, density, directed, source=-1):
 	e=[]
-	rndStr=str(random.randint(0,9))
 	nodes= list(range(0, n))
 	random.shuffle(nodes) 
-	rndStr+=str(nodes)
-	
 	if source>=0:
 		nodes.remove(source)
 		nodes=[source] + nodes
 	for i in  range(1,n):		
-		e+=[[nodes[random.randint(0,i-1)], nodes[i]]]	
-	rndStr+=str(e)
+		e+=[[nodes[random.randint(0,i-1)], nodes[i]]]
 	for i in range(0, int(density*n)):
 		u=random.randint(0,n-1)
 		v=random.randint(0,n-1)
 		if isNewEdge(e,u,v)  and ( directed or  isNewEdge(e,v,u)):
 			e=e+[[u,v]]
-		rndStr+=str((u,v))
-	print("Random witness" + rndStr)
 	print("Generated graph: ")
 	print(e)
 	return str(e)	
