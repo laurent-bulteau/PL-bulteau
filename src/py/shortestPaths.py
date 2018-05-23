@@ -1,4 +1,5 @@
 import math
+import random
 
 '''
 def dijkstra (graph, n, s) :
@@ -10,6 +11,7 @@ def dijkstra (graph, n, s) :
 	while (len(rest)>0)
 		out+=[list(dist)]
 		m = math.inf
+import random
 		im=-1
 		for i in rest:
 			if dist[i]<m:
