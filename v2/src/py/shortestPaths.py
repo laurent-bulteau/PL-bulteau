@@ -46,28 +46,7 @@ def bellmanFord (graph, n, s) :
 			if d<dist[e[1]]:
 				dist[e[1]] = d
 	return out
-import copy
 
-def kruskall(graph, n) :
-	dists=[]	
-	for i in range(0,n):
-		dist=[]
-		for j in range(0,n):
-			dist=dist+[0 if i==j else math.inf]	
-		dists+=[dist]
-	for e in graph:
-		dists[e[0]][e[1]]=e[2]
-	out=[]	
-	for t in range(0,n):
-		last=copy.deepcopy(dists)
-		out+=[last]
-		for i in range(0,n):
-			for j in range(0,n):
-				dists[i][j]=min(dists[i][j], last[i][t]+last[t][j])		
-	out+=[dists]
-	return out
-	
-	
 '''
 def listOfBFErrors(graphSol, matrixSol):
 	n=graphSol['n']
@@ -99,17 +78,6 @@ def evaluateBF(graphSol, matrixSol):
 	else:
 		return False, "Il y a "+str(len(errs))+ " erreurs."+highlightCells(errs)
 	
-def nicePrintKruskall(k, n) :
-	for i in range(0,n+1):
-		print(i)
-		for j in range(0,n):
-			print("   "+str(k[i][j]).replace(",","\t "))
 	
-def test():
-	graph= [[0, 2, 7], [2, 4, 8], [2, 1, 5], [2, 5, 2], [5, 3, 9], [4, 0, 7], [5, 4, 10], [5, 2, 2], [3, 5, 3], [3, 0, 4]]
-	n= 6
-	nicePrintKruskall(kruskall(graph, n), n)
-	
-test()	
 
 	

@@ -49,7 +49,6 @@ var selectEdges=getDict("{{selectEdges}}", false);
 var scaleLabels=getDict("{{scaleLabels}}", 0.3);
 console.log("... done.")
 
-console.log(edges)
 var color = d3.scaleLinear()
     .domain([0, n-1])
     .range(["#88FF88", "#8888FF"]);
@@ -76,7 +75,6 @@ edges=edges.map(function(e){
     d.curved=false;
     
     return d;})
-console.log(edges.map(function(e){return e.str}))
 
 edges.forEach(function(e1) {
 	edges.forEach(function(e2) {
@@ -87,8 +85,7 @@ edges.forEach(function(e1) {
 	})
 })
 draw();
- console.log(edges.map(function(e){return e.str}))
-   
+    
     
     
 function highlightV(i){

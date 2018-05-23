@@ -1,0 +1,138 @@
+<div class="formElement" id="matrixHolder">
+</div>
+
+<style>
+
+#matrixHolder .cell {
+	text-align:center;
+	width:35px;
+	border: 1px solid #999;
+}
+#matrixHolder .cell input {
+   width:100%;
+}
+#matrixHolder .highlight {
+   background-color:#DAA;    
+}
+.copyButton {
+	opacity:0.5;
+	cursor:pointer;
+}
+.copyButton:hover {
+	opacity:1
+}
+</style>
+
+<script>
+
+	drawMatrix("matrix", {}) 
+
+function highlightCell(c, matrixID){
+	if (typeof matrixID=="undefined")
+		matrixID="matrix"
+	d3.select("#form_txt_"+matrixID+"_"+c).classed("highlight",true)
+}    
+function drawMatrix(matrixID, params) {
+console.log("Parsing matrix ...")
+	if (!('mat' in params)) params.mat=getDict("{{matrix}}",[["define field matrix"]])	
+	if (!('titleColumns' in params)) params.titleColumns=getDict("{{titleColumns}}",1);
+	if (!('titleRows' in params)) params.titleRows=getDict("{{titleRows}}",1);
+	if (!('copyLineButton' in params)) params.copyLineButton=getDict("{{copyLineButton}}",false);
+	if (!('newLineButton' in params)) params.newLineButton=getDict("{{newLineButton}}",false);	
+console.log("... done.")
+
+	var numberOfColumns=0;
+	params.mat.forEach(function(row) {
+		if (row.length>numberOfColumns)
+			numberOfColumns=row.length;
+	})
+	d3.select("#matrixHolder")
+		.append("table")
+		.attr("id", matrixID);
+
+	params.mat.forEach(newLine);
+	if (params.newLineButton) {
+		drawNewLineButton();
+	}
+
+	function copyLine(s,t) {
+		d3.selectAll(".row"+s+" .cell")
+			.each(function(d, i) {
+				var input= d3.select(this).select("input");
+				if (!input.empty()) {
+					var v=input.property("value");
+					var i2= d3.selectAll(".row"+t+" td:nth-child("+(i+1)+") input");
+					if (!i2.empty())
+						i2.property("value", v);				
+				}	
+			});
+	}
+
+	function newLine(d) {
+		var rowIndex = d3.selectAll("#"+matrixID+" tr").size()
+		var data = {array:d, index:rowIndex}
+		while(data.array.length<numberOfColumns){
+			data.array[data.array.length]=null;
+		}
+		var hasNull=false
+		data.array = data.array.map(function(label, j){
+			if (label==null) hasNull=true;
+			return {label:label, i:rowIndex-params.titleRows, j:j-params.titleColumns}
+		});
+				console.log("data:", data)
+		var tr=
+		d3.select("#"+matrixID)
+			.append("tr")
+			.datum(data)
+			.attr("class",  "row" +rowIndex)
+			
+		tr.selectAll("td")
+			.data(data.array)
+			.enter()
+			.append("td")
+			.attr("id", function(d) { return "cell_"+d.i+"_"+d.j })
+			.attr("class", function (d) {return "cell " + (d.label==null?"output":"input")})
+			.text(function(d){return d.label==null?"":d.label;})	
+			.filter(function(d){return d.label==null;})	
+			.append("input")	
+			.attr("id", function(d) { return "form_txt_matrix_"+d.i+"_"+d.j })
+			.attr("name", function(d) { return "form_txt_matrix_"+d.i+"_"+d.j })
+			.on("change", clearSolutionHighlight) //clearMatrixHighlights)
+			.on("keypress", clearSolutionHighlight) //() clearMatrixHighlights)
+			
+				console.log("data:", data)
+		if (params.copyLineButton && data.index>params.titleRows && hasNull) {
+			console.log("addbutton")
+			
+			tr
+				.append("td")
+				.append("img")
+				.attr("width", 20)
+				.attr("height", 20)
+				.attr("class","copyButton")
+				.attr("title", "Cliquez ici pour recopier la ligne précédente")	
+				.attr("src", " data:image/png;base64,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")
+				.on("click", function(d) {
+					copyLine(d.index-1,d.index)
+				})
+		}
+	}
+	onClearSolutionHighlight(function () {
+		d3.selectAll("#"+matrixID+" .highlight").classed("highlight", false);
+	});
+	function drawNewLineButton() {	
+			d3.select("#matrixHolder")
+				.append("br")
+			d3.select("#matrixHolder")			
+			.append("img")
+			.attr("width", 20)
+			.attr("height", 20)
+			.attr("class","newButton")
+			.attr("title", "Insérer une nouvelle ligne")	
+			.attr("src", " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAdVBMVEUAgAD////b7du/379/v3+dzp0TiRNDoUPx+PEjkSNhsGH7/fsHgwf3+/dJpEm53Lnh8OGl0qWRyJHN5s0ZjBmz2bNns2fl8uVZrFlzuXOVypV5vHnH48fr9eut1q05nDlRqFGHw4cplCnV6tU7nTtbrVtlsmXm4nVfAAAEX0lEQVR4nO2b6ZaiMBCFg6iobAIqjbhg2877P+KAG6ipkEoqpM+Zub/F+0GSylbFHDUtd8mpWFRVFEXVpRhv19lM7Y8Y+gk/SxfHgH1q5RWHpWmAcxpNOd6t5otkbwwgK+ZC87sCb4tgkAZYjr9l3O8M1cGnBYgrXqsL22KckwH4CeLlO59hMyIBULS/IfR/hV4A90fV/oow7gsPPQD5Rce+0fygAeBPxINeTpEwOokA8ojAvtZ0ogawXtH416rgzggChAV25Iu0crEAe6LP/1AANQMAMFIe+6BKfnDmA2R0zd/qD5eAC+BSjL5PfYWSAIb868HAIeAAGPPnEnwC7Mz581rhA+Bsov+1Wrz3xHeAXGrVpaFCDDA7GvZnLBUB+F/G/VmwFgCczPvXk+MIBHCl55+5x5Hs2unHBwD28h1w7HA0kn36BAAgOoAeQJBxAQ7y/poA7Ng2Qguwx0QgTYDOWGwBNgh/bYBp/gGQoVZgugDs8gHgYfz1AZ798AEQo/z1AVj0BoCcA/QB2O4FAPkBKAC8FwBcDyABYFkH4Iz0JwFYdABQMYAKIMifADP0MpAC4PYnV4AJ1p8GYP4EwHZBIoDrSGwA9vh9MA3A5g6AbwEigJV/A1DYidMANG1QA4QKJxFEAOUVwMX7UwEcrwClPQCWNwAqmyEqgEMNoNIFyADKGiBT8CcD8GoAhShABzCtAdAzISUAWzJ4IgjWLiju8W8I/96Fgl3MHHBDOFW8iONqAZhsmQ8OgkEAiroRrAJUbGcXwGNr2wCJbQA4Dg0EkNoGgA/G/pUv8B/A+iiwHoish2J4FTEIwBcL7QKUzAEPSAdakMBLskEAYsGidBCAnDlgJAq2E1AZz2QG/34CXGY0y3J4HApEuTGxujUrfsPm1CnsAQT7BgCeDYwDHH/HEY3FQyr3BrC1BfA4prN+UKnQBjQA8QMA3h0ZBWhawOpxfek8APCxiOTCYtQCjLDdkALgdnF3v7SqLACsuwDYOZkA4NvpAmBHIgHA4RUAd3dNAPBIIXheXlcDA9xvbluA87DX91/OOwDu2kA7gWH0CTDDJHHpApyeD9lJYvnmJbEMmcazax+ykshUdh56SeWKpUeCFsCxm9X4mswmPSvqAEzP3YdeAULZa+zpnCO5TKjgNd3+LaExp09oftfJEQGYTim9LURFAGaTausQ3JfUWg8FkwRRf1ovZjAS+HNTu9emvkHEOfThJrcbagXO+0Pp/UZ64oXnDxU4ZPQJ1htMgUMdkYhTrIMUMAKLXGbQyZ6SVjHkIyjzIalyuklQ6yQqdBpplZm1mm4FxYfiUq8txUfwziKPnmK3ZaVrv0rEtZe95X6x1gQdFJrlfk5Tcqc8Qweb/jJgmZLPMFUKS8GCpuTzipCgB8SKsOj1qnOBaIkgSriBXweg7gzuRoohOKZyL48FaBh2J0+8XFldDJZ+3xS6UPH7T5EYL35/yF+6ybhYVJHnRVG1KdNEtfz/L/O4Pth7A4fiAAAAAElFTkSuQmCC")
+			.on("click", function(d) {
+				newLine([])
+			})
+	}
+}
+</script>

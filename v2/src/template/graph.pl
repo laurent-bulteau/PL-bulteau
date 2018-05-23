@@ -37,11 +37,9 @@ before=@/src/py/graphs.py
 
 before+=
 form+="</center>"
-print("BUILD seed : "+str(seed))
 
 import random
 random.seed(seed)
-print("BUILD seed : "+str(seed)+ "  --> "+str(random.randint(0,99)))
 
 pyDirected=False
 if (directed=="true"):
@@ -63,7 +61,6 @@ except NameError:
 	if pyWeighted:		
 		edges=generateRandomWeightedGraph(int(graphSize), float(randomDensity), pyDirected,int(minRandomWeight),int(maxRandomWeight), int(sourceVertex))
 	else:
-		print("  rnd "+str(random.randint(0,99)))
 		edges=generateRandomGraph(int(graphSize), float(randomDensity), pyDirected, int(sourceVertex))
 		
 

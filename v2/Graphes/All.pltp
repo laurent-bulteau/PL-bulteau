@@ -1,0 +1,11 @@
+author=Laurent Bulteau
+title=Tous les exercices sur les graphes
+
+introduction = Bonne chance!
+@ MWE.pl
+@ SpanningTree.pl
+@ MinimumSpanningTree.pl
+@ BellmanFord.pl
+
+@ MWE2.pl
+

@@ -1,5 +1,7 @@
-<div class="formElement" >
-<svg id="graphSVG" width=350 height=350 viewBox="0 0 100 100" >
+
+<center>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<svg id="mainSVG" width=350 height=350 viewBox="0 0 100 100" >
  <defs>
     <marker id="endtriangle"
   viewBox="0 0 10 10" refX="0" refY="5" 
@@ -16,14 +18,14 @@
     <path d="M -2 5 L 8 0 L 8 10 z" />
     </marker>
 </defs>
+
  <rect width="100%" height="100%" fill="#F8F8F0" /> 
  <g id="edges"/>
  <g id="vertices"/>
 </svg><br>
-<input type="checkbox" name="form_txt_done" id="form_txt_done" value=1 style='display:none'>
-<input name="form_txt_selectedEdges" id="form_txt_selectedEdges"  autocomplete="off" value="" style='display:none'>
-<input name="form_txt_selectedVertices" id="form_txt_selectedVertices" autocomplete="off" value="" style='display:none'>
-</div>
+<input type="checkbox" name="form_txt_done" id="form_txt_done" value=1 style='visibility:hidden'>
+<input name="form_txt_selectedEdges" id="form_txt_selectedEdges" value="" style='visibility:hidden'>
+<input name="form_txt_selectedVertices" id="form_txt_selectedVertices" value="" style='visibility:hidden'>
 
 <style>
 .outterEdge:hover .highlight {
@@ -38,8 +40,38 @@ svg text {
 }
 </style>
 <script>
+var getDict = (function() {
+  // this prevents any overhead from creating the object each time
+  var element = document.createElement('div');
+  //replace html codes like &#30; with their actual char
+  function decodeHTMLEntities (str) {
+    if(str && typeof str === 'string') {
+      // strip script/html tags
+      str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
+      str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
+      element.innerHTML = str;
+      str = element.textContent;
+      element.textContent = '';
+    }
+    return str;
+  }
+  function parse(s,def) {
+    if (!s) 
+      return def;
+    var decode=decodeHTMLEntities(s);
+    try{
+      return JSON.parse(decode);  
+    } catch(error){
+      console.error("Error parsing Django string (this should be valid JSON):\n", decode);
+      console.error(error);     
+      return def;
+    }    
+  }
+  return parse;
+})();
 
-console.log("Parsing graph parameters ...")
+</script>
+<script>
 var n=getDict("{{graphSize}}",7);
 var edges=getDict("{{edges}}",[]);
 var vertexLabel=getDict("{{vertexLabel}}",[]);
@@ -47,9 +79,7 @@ var directed=getDict("{{directed}}",false);
 var selectVertices=getDict("{{selectVertices}}", false);
 var selectEdges=getDict("{{selectEdges}}", false);
 var scaleLabels=getDict("{{scaleLabels}}", 0.3);
-console.log("... done.")
 
-console.log(edges)
 var color = d3.scaleLinear()
     .domain([0, n-1])
     .range(["#88FF88", "#8888FF"]);
@@ -69,26 +99,12 @@ for (var i=0; i<n; i++) {
 
 var selectedEdges=  d3.select("#form_txt_selectedEdges").property("value"); 
 edges=edges.map(function(e){
-    var d={source:vertices[e[0]], target:vertices[e[1]], select:false, radius:1,middle:{x:0,y:0}, directed:directed};
+    var d={source:vertices[e[0]], target:vertices[e[1]], select:false, radius:1};
     d.label= (e.length>2 ? e[2] : "") ;
     d.str='('+e.join(',')+')';
     d.select=selectedEdges.indexOf(d.str)!=-1;
-    d.curved=false;
-    
     return d;})
-console.log(edges.map(function(e){return e.str}))
-
-edges.forEach(function(e1) {
-	edges.forEach(function(e2) {
-		if (e1.source==e2.target && e2.source==e1.target && (e1.label + e2.label != "")) {
-			e1.curved=true;
-			e2.curved=true;
-		}
-	})
-})
 draw();
- console.log(edges.map(function(e){return e.str}))
-   
     
     
 function highlightV(i){
@@ -99,12 +115,11 @@ function highlightE(s,t){
   d3.select("#edge"+s+"-"+t).classed("highlightSol",true)
   updateEdgeStyle();  
 }
-onClearSolutionHighlight(function () {
+function clearSolHighlights() {
   d3.selectAll(".highlightSol").classed("highlightSol", false);
   updateVertexStyle();
   updateEdgeStyle();
-});
-
+}
 
 function updateEdgeStyle(){
 	d3
@@ -122,7 +137,6 @@ function updateEdgeStyle(){
        .style("stroke-opacity", 1)
     
 }
-
 function updateVertexStyle(){
   d3.selectAll(".vertex")
     .style("fill", function(d){return (!selectVertices ||d.select) ? color(d.i): colorDim(d.i)})  
@@ -135,60 +149,21 @@ function updateVertexStyle(){
     .style('stroke', 'black')
     .style('fill', 'red');
 }
-
 function draw() {
   
-  var curvedDirectedLink=function(e) {	
-	var r=e.target.radius+3.2; //radius of node + size of the triangle
-    var dx=e.target.x-e.source.x;
-    var dy=e.target.y-e.source.y;
-    var l=Math.sqrt(dx*dx+dy*dy);
-    
-    e.middle.x=(e.source.x+e.target.x)/2-dy/l*r*0.7;
-	e.middle.y=(e.source.y+e.target.y)/2+dx/l*r*0.7;
-    
-    
-    var c1=(e.middle.x-dx*.25)+","+(e.middle.y-dy*.25);
-    var c2=(e.middle.x+dx*.25)+","+(e.middle.y+dy*.25);
-    
-    
-    var dx2=e.target.x-(e.middle.x+dx/4);
-    var dy2=e.target.y-(e.middle.y+dy/4);
-    var l2=Math.sqrt(dx2*dx2+dy2*dy2);
-    
-    dx2=dx2*(r)/l2;
-    dy2=dy2*(r)/l2;        
-    var path = "M "+e.source.x+","+e.source.y;
-    path+=" Q "+c1+ " "+e.middle.x+","+e.middle.y;
-    path+=" Q "+c2+ " "
-    //+(e.target.x-1.5*dx2)+","+(e.target.y-1.5*dy2)+ " "
-			+(e.target.x-dx2)+","+(e.target.y-dy2);
-    return path;
-  } 
-  var curvedLink=function(e) {	
-    return curvedDirectedLink(e)+" L "+e.target.x+","+e.target.y;
-  }
+     
   var link=function(e){  
-	e.middle.x=(e.source.x+e.target.x)/2;
-	e.middle.y=(e.source.y+e.target.y)/2;
-	return "M "+e.source.x+","+e.source.y+" L"+e.target.x+","+e.target.y;
+    return "M "+e.source.x+","+e.source.y+" L"+e.target.x+","+e.target.y;
   }
-  
   var directedLink=function(e){  
-    e.middle.x=(e.source.x+e.target.x)/2;
-	e.middle.y=(e.source.y+e.target.y)/2;
-	var r=e.target.radius+3.2; //radius of node + size of the triangle
+    var r=e.target.radius+3.2; //radius of node + size of the triangle
     var dx=e.target.x-e.source.x;
     var dy=e.target.y-e.source.y;
-    
     var l=Math.sqrt(dx*dx+dy*dy);
     dx=dx*(l-r)/l;
     dy=dy*(l-r)/l;        
     return "M "+e.source.x+","+e.source.y+" l"+dx+","+dy;
   }
-  
-  
-  
   var drag = d3.drag().on("drag", dragged);
   
   function inBounds(z) {
@@ -208,8 +183,8 @@ function draw() {
   }
   function edgeClick(d) {
      d.select =!d.select;
-    // clearSolHighlights() ;
-     clearSolutionHighlight();
+     clearSolHighlights() ;
+     
      var sel=edges.filter(function(d){return d.select})
              .map(function(d){return "("+d.source.i+","+d.target.i+","+(d.label||"0")+")"})
              .join(",");
@@ -219,8 +194,8 @@ function draw() {
   }
   function vertexClick(d) {
      d.select =!d.select;
-     //clearSolHighlights(); 
-     clearSolutionHighlight();
+     clearSolHighlights(); 
+     
      var sel=vertices.filter(function(d){return d.select})
              .map(function(d){return d.i})
              .join(",");
@@ -228,28 +203,21 @@ function draw() {
      d3.select("#form_txt_selectedVertices").property("value", sel); 
      updateVertexStyle();
   }
-   
-   
   function updatePositions() {
      d3
       .selectAll(".outterVertex")
       .attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
     d3
-      .selectAll(".edge.undirected.curved")
-      .attr("d", curvedLink); 
-    d3
-      .selectAll(".edge.directed.curved")
-      .attr("d", curvedDirectedLink);
-    d3
-      .selectAll(".edge.undirected.straight")
-      .attr("d", link);
-    d3
-      .selectAll(".edge.directed.straight")
+      .selectAll(".edge.directed")
       .attr("d", directedLink);
+    d3
+      .selectAll(".edge.undirected")
+      .attr("d", link);
     d3
       .selectAll(".outterEdgeLabel")
       .attr("transform", function(d){
-            return "translate("+d.middle.x+","+d.middle.y+")"});      
+            return "translate("+(d.source.x+d.target.x)/2+","+
+                                (d.source.y+d.target.y)/2+")"});      
   }
    
   function setHoverClass(hover) {
@@ -276,17 +244,16 @@ function draw() {
 // edge highlight (path):
   d3.selectAll(".outterEdge")
     .append("path")
-    .attr("class", function(d){return "edge highlight undirected" +(d.curved?" curved":" straight")})
+    .attr("class", "edge highlight undirected")
     .attr("d", link)
     .style("fill", "none")
     .style("stroke-width", "4")
     
     
-    
 // edge (path):
   d3.selectAll(".outterEdge")
     .append("path")
-    .attr("class", function(d){return "edge show "+(directed?"directed":"undirected") +(d.curved ?" curved":" straight")})
+    .attr("class", "edge show "+(directed?"directed":"undirected"))
     .attr("d", link)
     .style("stroke", "black")
     .attr("marker-end","url(#endtriangle)")
@@ -356,3 +323,4 @@ function draw() {
 
 }
 </script>
+</center>
