@@ -21,11 +21,17 @@ copyLineButton=true
 sourceVertex=0
 
 
+form=@/src/html/mainForm.html
+form+=@/src/html/matrixElement.html
+form+=@/src/html/graphElement.html
+form+=
+{{extraForm}}
+==
+extraForm=</center>
 before=@/src/py/graphs.py
 before+=@/src/py/matrices.py
 
 before+=
-form+="</center>"
 
 import random
 random.seed(seed)
@@ -53,8 +59,12 @@ except NameError:
 		edges=generateRandomGraph(int(graphSize), float(randomDensity), pyDirected, int(sourceVertex))
 	
 matrix=matrix.replace("2","2,22")
-form+=drawAnotherMatrix("other", {'mat':[["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]})	
+print(len(form))
+ex=drawAnotherMatrix("other", {'mat':[["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]})	
+print(ex)
+extraForm+=ex
 
+print(len(form))
 ==
 
 

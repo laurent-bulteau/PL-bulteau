@@ -23,6 +23,7 @@ evaluator=@/src/py/graphs.py
 evaluator+=@/src/py/spanningTrees.py
 evaluator+=
 
+print("EVALUATE seed : "+str(seed))
 sol=readSolution()
 
 

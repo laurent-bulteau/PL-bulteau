@@ -26,13 +26,10 @@ evaluator+=@/src/py/shortestPaths.py
 evaluator+=
 
 
-sol=readSolution()
-print(sol)
-mat=readIntMatrix(valueForBlank)
-
-print(mat)
 
 
-grade=evaluateBF(sol, mat)
+grade=evaluateBF(readSolution(), readIntMatrix(valueForBlank))
 
 ==
+
+
