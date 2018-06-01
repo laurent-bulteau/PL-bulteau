@@ -2,19 +2,22 @@ author=Laurent Bulteau
 title=Algorithmique des graphes
 
 introduction ==
-Ce TP regroupe 5 exercices permettant de travailler diuvers algorithmes de graphes sur deux thèmes:
+Ce TP regroupe 5 exercices permettant de travailler divers algorithmes de graphes sur deux thèmes:
     
 * **Arbres couvrants**    
 * **Plus courts chemins**    
 
 Bonne chance!
+
+**Attention:** Le TP est encore en version Beta, en particulier, le bouton "sauvegarder" ne fonctionne pas: quitter un exercice fait perdre la progression.
 ==
 
 @ SpanningTree.pl
 @ MinimumSpanningTree.pl
 @ Prim.pl
 @ BellmanFord.pl
-@ Kruskall.pl
+@ FloydWarshall.pl
+
 
 
 

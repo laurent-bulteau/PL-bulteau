@@ -50,6 +50,7 @@ def parseSolution(reponse,dic):
 	out['s']=int(dic.get("sourceVertex",0))
 	out['t']=int(dic.get("targetVertex",0))
 	out['graph']=parseListOfEdges(dic.get("edges","[]"))
+	out['addedEdges']=parseListOfEdges(dic.get("addedEdges","[]"))
 	if (not sublist(out['edges'],out['graph'])):
 		print("Selected:"+str(out['edges']))
 		print("graph:"+str(out['graph']))

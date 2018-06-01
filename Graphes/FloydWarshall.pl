@@ -1,16 +1,16 @@
 author = Laurent Bulteau
-name= Kruskall
-title=Algorithme de Kruskall
+name= FloydWarshall
+title=Algorithme de Floyd-Warshall
 
 template=/src/template/graphAndMatrix.pl
 
 text==
 
 
-**Calcul de la matrice des plus courts chemins en utilisant l'algorithme de Kruskall**
+**Calcul de la matrice des plus courts chemins en utilisant l'algorithme de Floyd-Warshall**
 
 
-Les deux premières étapes de l'algorithme de Kruskall ont été appliquées sur le 
+Les deux premières étapes de l'algorithme de Floyd-Warshall ont été appliquées sur le 
 graphe ci-dessous (i.e. avec les sommets **A** et **B**), ce qui nous a permis d'obtenir 
 la première matrice donnée. 
 
@@ -93,6 +93,7 @@ grade=evaluateKruskall(mat, expected,"fillIn")
 
 
 ==
+
 
 
 

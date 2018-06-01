@@ -15,6 +15,21 @@
   orient="auto">
     <path d="M -2 5 L 8 0 L 8 10 z" />
     </marker>
+    
+    <marker id="endtriangleNew"
+  viewBox="0 0 10 10" refX="0" refY="5" 
+  markerUnits="strokeWidth"
+  markerWidth="4" markerHeight="3"
+  orient="auto" overflow="visible" stroke="#777" fill="#777">
+    <path d="M 0 0 L 10 5 L 0 10 z" />
+    </marker>
+    <marker id="starttriangleNew" overflow="visible"
+  viewBox="0 0 10 10" refX="5" refY="5" 
+  markerUnits="strokeWidth"
+  markerWidth="4" markerHeight="3" stroke="#777" fill="#777"
+  orient="auto">
+    <path d="M -2 5 L 8 0 L 8 10 z" />
+    </marker>
 </defs>
  <rect width="100%" height="100%" fill="#F8F8F0" /> 
  <g id="edges"/>
@@ -22,6 +37,7 @@
 </svg><br>
 <input type="checkbox" name="form_txt_done" id="form_txt_done" value=1 style='display:none'>
 <input name="form_txt_selectedEdges" id="form_txt_selectedEdges"  autocomplete="off" value="" style='display:none'>
+<input name="form_txt_addedEdges" id="form_txt_addedEdges"  autocomplete="off" value="" style='display:block'>
 <input name="form_txt_selectedVertices" id="form_txt_selectedVertices" autocomplete="off" value="" style='display:none'>
 </div>
 
@@ -46,6 +62,7 @@ var vertexLabel=getDict("{{vertexLabel}}",[]);
 var directed=getDict("{{directed}}",false);
 var selectVertices=getDict("{{selectVertices}}", false);
 var selectEdges=getDict("{{selectEdges}}", false);
+var addEdges=getDict("{{addEdges}}", false);
 var scaleLabels=getDict("{{scaleLabels}}", 0.3);
 console.log("... done.")
 
@@ -67,25 +84,58 @@ for (var i=0; i<n; i++) {
                    radius:4});
 }
 
-var selectedEdges=  d3.select("#form_txt_selectedEdges").property("value"); 
-edges=edges.map(function(e){
+
+var addEdges = {allow:addEdges, start:null, active:false, end:null, set:JSON.parse(d3.select("#form_txt_addedEdges").property("value") || "[]")};
+
+var selectedEdges=  d3.select("#form_txt_selectedEdges").property("value");
+
+function makeEdge(e) {
+	console.log(e);
     var d={source:vertices[e[0]], target:vertices[e[1]], select:false, radius:1,middle:{x:0,y:0}, directed:directed};
     d.label= (e.length>2 ? e[2] : "") ;
     d.str='('+e.join(',')+')';
     d.select=selectedEdges.indexOf(d.str)!=-1;
-    d.curved=false;
-    
-    return d;})
-console.log(edges.map(function(e){return e.str}))
+    d.new=false;
+    d.curved=false;    
+    return d;
+}
+function edgeKey(e) {
+	if (!(e instanceof Array)) {
+		e=[e.source.i,e.target.i];
+	} else {
+		e=[e[0],e[1]];
+	}
+	if (!directed) 
+		e=e.sort()
+	return JSON.stringify(e)
+}
 
-edges.forEach(function(e1) {
-	edges.forEach(function(e2) {
-		if (e1.source==e2.target && e2.source==e1.target && (e1.label + e2.label != "")) {
-			e1.curved=true;
-			e2.curved=true;
-		}
+function sameEdgeNoWeight(e1,e2) {
+	return edgeKey(e1)==edgeKey(e2);
+}
+function removeEdge(e) {
+	edges=edges.filter(function(f){ return !sameEdgeNoWeight(f,e); })
+}
+function containsEdge(e) {
+	return edges.some(function(f){return  sameEdgeNoWeight(f,e); });
+}
+function updateCurvedEdges() {
+	edges.forEach(function(e) {	e.curved=false;})
+	console.log("hop")
+	edges.forEach(function(e1) {
+		edges.forEach(function(e2) {
+			if (e1.source==e2.target && e2.source==e1.target) {
+				e1.curved=true;
+				e2.curved=true;
+			}
+		})
 	})
-})
+}
+
+edges=edges.map(makeEdge)
+console.log(edges.map(function(e){return e.str}))
+updateCurvedEdges()
+
 draw();
  console.log(edges.map(function(e){return e.str}))
    
@@ -228,7 +278,43 @@ function draw() {
      d3.select("#form_txt_selectedVertices").property("value", sel); 
      updateVertexStyle();
   }
+  function updateNewEdgesBox() {
+	var newEdges=edges.filter(function(d){return d.new})
+             .map(function(d){return "("+d.source.i+","+d.target.i+","+(d.label||"0")+")"})
+             .join(",");
+	d3.select("#form_txt_addedEdges").property("value", newEdges);	
+  }
+  function vertexDblClick(d) {
+     if (!addEdges.allow) return;
+     addEdges.active=!addEdges.active
+     if (addEdges.active){
+		addEdges.source=d;
+		addEdges.target=d;
+     } else {		
+		e=makeEdge([addEdges.source.i, d.i]);
+		if (containsEdge(e)) 
+			return;		
+		e.new=true;
+		edges.push(e);		
+	    updateCurvedEdges();
+		updateNewEdgesBox();
+		drawEdges();
+		updateEdgeStyle();  
+		updatePositions();
+     }     
+  }   
    
+  function edgeDblClick(d) {
+     if (!addEdges.allow) return;
+     if (d.new)
+		removeEdge(d);
+	updateCurvedEdges();
+	updateNewEdgesBox();
+	drawEdges();
+	updateEdgeStyle();  
+	updatePositions();
+		
+  }
    
   function updatePositions() {
      d3
@@ -258,98 +344,117 @@ function draw() {
       updateEdgeStyle();
     }
   }
-//outter edge group :
-  d3.select("#edges")
-    .selectAll(".outterEdge")
-    .data(edges)
-    .enter()
-    .append("g")
-    .attr("id", function(d){return "edge"+d.source.i+"-"+d.target.i})
-    .attr("class",  "outterEdge")    
-    .on("mouseleave", setHoverClass(false))
-    .on("mouseenter", setHoverClass(true))
-    .style("cursor", (selectEdges?"pointer":"default"))
-  if (selectEdges)  
-    d3.selectAll(".outterEdge").on("click",edgeClick)
-    
-    
-// edge highlight (path):
-  d3.selectAll(".outterEdge")
-    .append("path")
-    .attr("class", function(d){return "edge highlight undirected" +(d.curved?" curved":" straight")})
-    .attr("d", link)
-    .style("fill", "none")
-    .style("stroke-width", "4")
-    
-    
-    
-// edge (path):
-  d3.selectAll(".outterEdge")
-    .append("path")
-    .attr("class", function(d){return "edge show "+(directed?"directed":"undirected") +(d.curved ?" curved":" straight")})
-    .attr("d", link)
-    .style("stroke", "black")
-    .attr("marker-end","url(#endtriangle)")
-    .style("fill", "none")
-    
-// edge label (outter group):
-  d3.selectAll(".outterEdge")
-     .filter(function(d) {return d.label})
-    .append("g")
-    .attr("class", "outterEdgeLabel")    
   
-// edge label (background circle):
-  d3.selectAll(".outterEdgeLabel")  
-    .append("circle")    
-    .style("stroke", "none")
-    .style("fill", "#FFFFF8")    
-    .style("opacity",.9)
-    .attr("cx",0)
-    .attr("cy",0)        
-    .attr("r",function(d){return d.radius})
+  function drawEdges() {
+	
+	//outter edge group :
+	
+	d3.selectAll(".outterEdge").remove()
+	
+	d3.select("#edges")
+		.selectAll(".outterEdge")
+		.data(edges, edgeKey)
+		.enter()
+		.append("g")
+		.attr("id", function(d){return "edge"+d.source.i+"-"+d.target.i})
+		.attr("class",  "outterEdge")    
+		.on("mouseleave", setHoverClass(false))
+		.on("mouseenter", setHoverClass(true))
+		.style("cursor", (selectEdges?"pointer":"default"))
+	if (selectEdges)  
+		d3.selectAll(".outterEdge").on("click",edgeClick)
+		
+		
+	// edge highlight (path):
+	d3.selectAll(".outterEdge")
+		.append("path")
+		.attr("class", function(d){return "edge highlight undirected" +(d.curved?" curved":" straight")})
+		.attr("d", link)
+		.style("fill", "none")
+		.style("stroke-width", "4")
+		
+		
+		
+	// edge (path):
+	d3.selectAll(".outterEdge")
+		.append("path")
+		.attr("class", function(d){return "edge show "+(directed?"directed":"undirected") +(d.curved ?" curved":" straight")})
+		.attr("d", link)
+		.style("stroke", function(d){return d.new?"#777": "black"})
+		.attr("marker-end",function(d){return "url(#endtriangle"+(d.new?"New)":")")})
+		.style("fill", "none")
+		
+	// edge label (outter group):
+	d3.selectAll(".outterEdge")
+		.filter(function(d) {return d.label})
+		.append("g")
+		.attr("class", "outterEdgeLabel")    
+	
+	// edge label (background circle):
+	d3.selectAll(".outterEdgeLabel")  
+		.append("circle")    
+		.style("stroke", "none")
+		.style("fill", "#FFFFF8")    
+		.style("opacity",.9)
+		.attr("cx",0)
+		.attr("cy",0)        
+		.attr("r",function(d){return d.radius})
+	
+	// edge label (text):
+	d3.selectAll(".outterEdgeLabel")  
+		.append("text")  
+		.attr("class", "edgeLabel")
+		.attr("transform","scale("+scaleLabels+")")
+		.attr("x",0)
+		.attr("y",5)    
+		.html(function (d){return d.label})
+		.style("cursor", (selectEdges?"pointer":"default"))
+		.each(setCircleToTextSize)
+		
+	if (addEdges.allow) 
+		d3.selectAll(".outterEdge").on("dblclick",edgeDblClick)
   
-// edge label (text):
-  d3.selectAll(".outterEdgeLabel")  
-    .append("text")  
-    .attr("class", "edgeLabel")
-    .attr("transform","scale("+scaleLabels+")")
-    .attr("x",0)
-    .attr("y",5)    
-    .html(function (d){return d.label})
-    .style("cursor", (selectEdges?"pointer":"default"))
-    .each(setCircleToTextSize)
-    
-//vertex: outter group    
-  d3.select("#vertices")
-    .selectAll(".outterVertex")
-    .data(vertices)
-    .enter()
-    .append("g")
-    .attr("class", "outterVertex")  
-    .style("cursor", (selectVertices?"pointer":"default"))  
-    .call(drag)
-    .on("mouseover", function(){this.parentNode.appendChild(this);})
-//vertex: circle
-    .append("circle")
-    .attr("id", function(d){return "vertex"+d.i})
-    .attr("class", "vertex")
-    .attr("r", function(d){return d.radius})
-    
-  if (selectVertices)  
-    d3.selectAll(".outterVertex").on("click",vertexClick)
-    
-//vertex: label (text)
-  d3.selectAll(".outterVertex")
-    .filter(function(d){return d.label})
-    .append("text")  
-    .attr("class", "vertexLabel")
-    .attr("transform","scale("+scaleLabels+")")
-    .attr("x",0)
-    .attr("y",5)    
-    .style("cursor", (selectVertices?"pointer":"default"))
-    .html(function (d){return d.label})
-    .each(setCircleToTextSize)
-    
+  }
+  function drawVertices() {	
+		
+	d3.selectAll(".outterVertex")
+		.remove();
+	//vertex: outter group    
+	d3.select("#vertices")
+		.selectAll(".outterVertex")
+		.data(vertices)
+		.enter()
+		.append("g")
+		.attr("class", "outterVertex")  
+		.style("cursor", (selectVertices?"pointer":"default"))  
+		.call(drag)
+		.on("mouseover", function(){this.parentNode.appendChild(this);})
+	//vertex: circle
+		.append("circle")
+		.attr("id", function(d){return "vertex"+d.i})
+		.attr("class", "vertex")
+		.attr("r", function(d){return d.radius})
+		
+	if (selectVertices)  
+		d3.selectAll(".outterVertex").on("click",vertexClick)
+	if (addEdges.allow) 
+		d3.selectAll(".outterVertex").on("dblclick",vertexDblClick)
+		
+	//vertex: label (text)
+	d3.selectAll(".outterVertex")
+		.filter(function(d){return d.label})
+		.append("text")  
+		.attr("class", "vertexLabel")
+		.attr("transform","scale("+scaleLabels+")")
+		.attr("x",0)
+		.attr("y",5)    
+		.style("cursor", (selectVertices?"pointer":"default"))
+		.html(function (d){return d.label})
+		.each(setCircleToTextSize)
+  }
+  
+  drawVertices();
+  drawEdges();
   updateVertexStyle();
   updateEdgeStyle();  
   updatePositions();

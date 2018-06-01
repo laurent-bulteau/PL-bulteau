@@ -24,6 +24,7 @@ sourceVertex=-1
 vertexLabel=["A","B","C","D","E","F","G", "H","I","J","K","L","M","N","O","P","Q","R","T","U","V","W","X","Y","Z"]
 
 
+addEdges=false
 
 
 form=@/src/html/mainForm.html
