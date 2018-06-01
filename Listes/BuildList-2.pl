@@ -1,5 +1,5 @@
 author = Laurent Bulteau
-name= Construction d'une liste
+name= Construction d'une liste - Niveau 2
 title=Construction d'une liste
 
 template=/src/template/graph.pl
@@ -14,10 +14,10 @@ Représenter la liste obtenue via le code suivant:
 		Liste L=NULL;
 		L=cons(L, #0);
 		L=cons(L, #1);
-		L=cons(L, #2);
+		L->succ=cons(NULL,#2)
 		L=cons(L, #3);
-
-*Rappel: Le premier élément d'une liste est généralement celui ajouté en dernier...*
+		L=cons(L, #4);
+		L->val=#5
 
 **Mode d'emploi**
 
@@ -59,7 +59,7 @@ evaluator+=
 print("evaluate")
 sol=readSolution()
 print(sol['addedEdges'])
-correct=compareToExpectedList(sol['addedEdges'],0,[L[3],L[2],L[1],L[0]] )
+correct=compareToExpectedList(sol['addedEdges'],0,[L[5],L[3],L[1],L[2]] )
 grade=(correct,"Bravo!" if correct else "Désolé, ce n'est pas ça")
 
 ==
