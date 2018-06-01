@@ -37,7 +37,7 @@
 </svg><br>
 <input type="checkbox" name="form_txt_done" id="form_txt_done" value=1 style='display:none'>
 <input name="form_txt_selectedEdges" id="form_txt_selectedEdges"  autocomplete="off" value="" style='display:none'>
-<input name="form_txt_addedEdges" id="form_txt_addedEdges"  autocomplete="off" value="" style='display:block'>
+<input name="form_txt_addedEdges" id="form_txt_addedEdges"  autocomplete="off" value="" style='display:none'>
 <input name="form_txt_selectedVertices" id="form_txt_selectedVertices" autocomplete="off" value="" style='display:none'>
 </div>
 
@@ -64,6 +64,7 @@ var selectVertices=getDict("{{selectVertices}}", false);
 var selectEdges=getDict("{{selectEdges}}", false);
 var addEdges=getDict("{{addEdges}}", false);
 var scaleLabels=getDict("{{scaleLabels}}", 0.3);
+var clientRatioForMouse = 3.5
 console.log("... done.")
 
 console.log(edges)
@@ -85,7 +86,11 @@ for (var i=0; i<n; i++) {
 }
 
 
-var addEdges = {allow:addEdges, start:null, active:false, end:null, set:JSON.parse(d3.select("#form_txt_addedEdges").property("value") || "[]")};
+var addEdges = {allow:addEdges, start:null, active:false, end:null, set:JSON.parse(d3.select("#form_txt_addedEdges").property("value") || "[]"),
+triggerAdd:(selectVertices?"dblclick":"click"),
+triggerRemove:(selectEdges?"dblclick":"click"),
+middle:{}
+};
 
 var selectedEdges=  d3.select("#form_txt_selectedEdges").property("value");
 
@@ -232,8 +237,9 @@ function draw() {
     var dy=e.target.y-e.source.y;
     
     var l=Math.sqrt(dx*dx+dy*dy);
-    dx=dx*(l-r)/l;
-    dy=dy*(l-r)/l;        
+    var ratio=Math.max(0, (l-r)/l);
+    dx=dx*ratio;
+    dy=dy*ratio;        
     return "M "+e.source.x+","+e.source.y+" l"+dx+","+dy;
   }
   
@@ -284,13 +290,40 @@ function draw() {
              .join(",");
 	d3.select("#form_txt_addedEdges").property("value", newEdges);	
   }
-  function vertexDblClick(d) {
+  function vertexClickForNewEdge(d,e) {
      if (!addEdges.allow) return;
      addEdges.active=!addEdges.active
      if (addEdges.active){
 		addEdges.source=d;
-		addEdges.target=d;
+		addEdges.target={x:d.x, y:d.y, r:d.r};
+		
+		d3.select("#newEdge")
+			.datum(addEdges)
+			.style("display",null)
+		var dx=d.x-d3.event.clientX/clientRatioForMouse;
+		var dy=d.y-d3.event.clientY/clientRatioForMouse;	
+		function followMouse() {
+			
+			console.log(dx, d3.event.clientX/clientRatioForMouse)
+			//var point = d3.mouse(this)
+			addEdges.target.x=(d3.event.clientX/clientRatioForMouse+dx)
+			addEdges.target.y=(d3.event.clientY/clientRatioForMouse+dy)
+			addEdges.target.radius=3;
+			console.log(directedLink(addEdges))
+			d3.select("#newEdge")
+				.attr("d", directedLink);			
+		}
+		followMouse();
+		d3.select("#graphSVG")
+			.on("mousemove", followMouse);
+		
      } else {		
+		d3.select("#graphSVG rect")
+			.on("mousemove", null);
+		d3.select("#newEdge")
+			.style("display","none")
+		if (d.i==addEdges.source.i) 
+			return;
 		e=makeEdge([addEdges.source.i, d.i]);
 		if (containsEdge(e)) 
 			return;		
@@ -303,11 +336,18 @@ function draw() {
 		updatePositions();
      }     
   }   
+  function cancelNewEdge() {
+	if (!addEdges.allow ||!addEdges.active) return;
+	addEdges.active=false;
+	d3.select("#graphSVG rect")
+		.on("mousemove", null);
+	d3.select("#newEdge")
+		.style("display","none")
+  }
    
-  function edgeDblClick(d) {
-     if (!addEdges.allow) return;
-     if (d.new)
-		removeEdge(d);
+  function edgeClickRemove(d) {
+    if (!addEdges.allow ||!d.new) return;
+    removeEdge(d);
 	updateCurvedEdges();
 	updateNewEdgesBox();
 	drawEdges();
@@ -412,7 +452,7 @@ function draw() {
 		.each(setCircleToTextSize)
 		
 	if (addEdges.allow) 
-		d3.selectAll(".outterEdge").on("dblclick",edgeDblClick)
+		d3.selectAll(".outterEdge").on(addEdges.triggerRemove,edgeClickRemove)
   
   }
   function drawVertices() {	
@@ -438,7 +478,7 @@ function draw() {
 	if (selectVertices)  
 		d3.selectAll(".outterVertex").on("click",vertexClick)
 	if (addEdges.allow) 
-		d3.selectAll(".outterVertex").on("dblclick",vertexDblClick)
+		d3.selectAll(".outterVertex").on(addEdges.triggerAdd,vertexClickForNewEdge)
 		
 	//vertex: label (text)
 	d3.selectAll(".outterVertex")
@@ -455,6 +495,17 @@ function draw() {
   
   drawVertices();
   drawEdges();
+  if (addEdges.allow)
+	d3.select("#graphSVG rect")
+		.on("click", cancelNewEdge)
+	d3.select("#edges")		
+		.append("path")
+		.attr("id","newEdge")
+		.attr("d", "")
+		.style("display","none")
+		.style("stroke", "#777")
+		.attr("marker-end", "url(#endtriangleNew)")
+		.style("fill", "none")
   updateVertexStyle();
   updateEdgeStyle();  
   updatePositions();

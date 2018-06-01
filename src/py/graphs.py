@@ -46,12 +46,12 @@ def parseSolution(reponse,dic):
 	out={}
 	out['edges']=parseListOfEdges(reponse.get("selectedEdges",""))
 	out['vertices']=parseListOfVertices(reponse.get("selectedVertices",""))
+	out['addedEdges']=parseListOfEdges(reponse.get("addedEdges","[]"))
 	out['n']=int(dic.get("graphSize",10))
 	out['s']=int(dic.get("sourceVertex",0))
 	out['t']=int(dic.get("targetVertex",0))
 	out['graph']=parseListOfEdges(dic.get("edges","[]"))
-	out['addedEdges']=parseListOfEdges(dic.get("addedEdges","[]"))
-	if (not sublist(out['edges'],out['graph'])):
+	if (not sublist(out['edges'],out['graph']) and not boolean(dic.get("addEdges", "false"))):
 		print("Selected:"+str(out['edges']))
 		print("graph:"+str(out['graph']))
 		raise ValueError("Les arêtes sélectionnées ne sont pas toutes dans le graphe d'entrée.")
