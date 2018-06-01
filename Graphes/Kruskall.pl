@@ -5,10 +5,25 @@ title=Algorithme de Kruskall
 template=/src/template/graphAndMatrix.pl
 
 text==
-Dans la matrice ci-dessous, saisir l'....
 
-La ligne "0" correspond à l'initialisation.
-Une case vide est comptée comme 0, utilisez le charactère "*" pour une valeur infinie.
+
+**Calcul de la matrice des plus courts chemins en utilisant l'algorithme de Kruskall**
+
+
+Les deux premières étapes de l'algorithme de Kruskall ont été appliquées sur le 
+graphe ci-dessous (i.e. avec les sommets **A** et **B**), ce qui nous a permis d'obtenir 
+la première matrice donnée. 
+
+Réaliser la troisème étape (avec le sommet **C**), 
+en remplissant la matrice suivante.
+
+
+
+
+**Mode d'emploi**
+
+* Utilisez le charactère ***** pour une valeur infinie.
+
 ==
 
 directed=true
@@ -17,54 +32,49 @@ weighted=true
 
 graphSize=6
 matrix = [["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]
-copyLineButton=true
-sourceVertex=0
 
 
-form=@/src/html/mainForm.html
-form+=@/src/html/matrixElement.html
-form+=@/src/html/graphElement.html
-form+=
-{{extraForm}}
-==
+minRandomWeight=1
+maxRandomWeight=10
+randomDensity=2
+
 extraForm=</center>
+
 before=@/src/py/graphs.py
 before+=@/src/py/matrices.py
+before+=@/src/py/shortestPaths.py
 
 before+=
 
 import random
 random.seed(seed)
 
-pyDirected=False
-if (directed=="true"):
-	pyDirected=True
-else :
-	directed="false"
-	
-pyWeighted=False
-if (weighted=="true"):
-	pyWeighted=True
-else :
-	weighted="false"
+generateEdgesFromParameters()
 
-print(graphSize)
 
-try:
-	edges	
-except NameError:	
-	if pyWeighted:		
-		edges=generateRandomWeightedGraph(int(graphSize), float(randomDensity), pyDirected,int(minRandomWeight),int(maxRandomWeight), int(sourceVertex))
-	else:
-		edges=generateRandomGraph(int(graphSize), float(randomDensity), pyDirected, int(sourceVertex))
-	
-matrix=matrix.replace("2","2,22")
-print(len(form))
-ex=drawAnotherMatrix("other", {'mat':[["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]})	
-print(ex)
-extraForm+=ex
+#run kruskall
+kMatrices = kruskall(parseListOfEdges(edges), int(graphSize))
 
-print(len(form))
+#show step 2
+k=kMatrices[2]
+k=addCharHeaders(k)
+matrix=encodeMatrixToSingleString(k)
+print(matrix)
+
+#remember step 3
+expected=kMatrices[3]
+print(str(k))
+
+#draw empty matyrix to fill In
+empty=addCharHeaders(increaseToSize([[]], int(graphSize)))
+
+form+=drawAnotherMatrix("fillIn", {'mat':empty})
+#form+=drawAnotherMatrix("fillIn", {'mat':[["","A","B","C","D","E","F"],[0],[1],[2],[3],[4],[5]]})
+#form+=drawAnotherMatrix("other", {'mat':encodeMatrixToStrings(k)})
+
+form+="</center>"
+
+
 ==
 
 
@@ -73,14 +83,16 @@ evaluator+=@/src/py/matrices.py
 evaluator+=@/src/py/shortestPaths.py
 evaluator+=
 
+print("Proposed solution:")
 
-sol=readSolution()
-print(sol)
-mat=readIntMatrix(valueForBlank)
-
+mat=readIntMatrix(valueForBlank,"fillIn")
 print(mat)
 
 
-grade=evaluateBF(sol, mat)
+grade=evaluateKruskall(mat, expected,"fillIn")
+
 
 ==
+
+
+

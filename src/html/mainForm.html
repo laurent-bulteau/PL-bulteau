@@ -1,6 +1,14 @@
 
 <center>
+
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+var seed = "{{seed}}".replace(",",".")+1;
+function random() {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
+</script>
 
 <style>
 

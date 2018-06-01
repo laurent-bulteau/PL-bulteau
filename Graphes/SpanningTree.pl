@@ -1,13 +1,19 @@
 author = Laurent Bulteau
-name= Spanning Trees
-title=Arbres Couvrants
+name= Abre couvrant
+title=Arbre couvrant
 
 template=/src/template/graph.pl
 
 text==
+
+**Calcul d'un arbre couvrant**
+
 Dans le graphe ci-dessous, sélectionnez des arêtes de façon à former un arbre couvrant.
 
-Vous pouvez déplacer les sommets en les faisant glisser.
+**Mode d'emploi**
+
+* Vous pouvez déplacer les sommets en les faisant glisser.
+* Cliquez sur une arête pour la (dé)sélectionner.
 ==
 
 
@@ -26,4 +32,7 @@ sol=readSolution()
 grade=evaluateST(sol)
 
 ==
+
+
+
 

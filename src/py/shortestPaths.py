@@ -89,10 +89,10 @@ def listOfBFErrors(graphSol, matrixSol):
 def listOfBFErrors(graphSol, matrixSol):
 	n=graphSol['n']
 	bf = bellmanFord(graphSol['graph'], n, graphSol['s'])
-	errs=[]
 	print(bf)
 	print(matrixSol)
 	return listOfErrors(bf, matrixSol, n)
+
 def evaluateBF(graphSol, matrixSol):
 	errs=listOfBFErrors(graphSol, matrixSol)
 	print(errs)
@@ -100,6 +100,17 @@ def evaluateBF(graphSol, matrixSol):
 		return True, "Bravo!"	
 	else:
 		return False, "Il y a "+str(len(errs))+ " erreurs."+highlightCells(errs)
+
+
+def evaluateKruskall(matrixSol, expected, matrixID):
+	errs=listOfErrors(matrixSol, expected, len(expected)) 
+	print(errs)
+	if errs==[]:
+		return True, "Bravo!"	
+	else:
+		return False, "Il y a "+str(len(errs))+ " erreurs."+highlightCells(errs, matrixID)
+
+
 	
 def nicePrintKruskall(k, n) :
 	for i in range(0,n+1):
@@ -112,6 +123,6 @@ def test():
 	n= 6
 	nicePrintKruskall(kruskall(graph, n), n)
 	
-test()	
+	
 
 	

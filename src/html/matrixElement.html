@@ -48,7 +48,10 @@ console.log("... done.")
 	})
 	d3.select("#matrixHolder")
 		.append("table")
-		.attr("id", matrixID);
+		.attr("id", matrixID)
+ 		.attr("cellspacing","2px")
+ 		.attr("margin","5px")
+ 		;
 
 	params.mat.forEach(newLine);
 	if (params.newLineButton) {
@@ -56,12 +59,12 @@ console.log("... done.")
 	}
 
 	function copyLine(s,t) {
-		d3.selectAll(".row"+s+" .cell")
+		d3.selectAll("#"+matrixID+" .row"+s+" .cell")
 			.each(function(d, i) {
 				var input= d3.select(this).select("input");
 				if (!input.empty()) {
 					var v=input.property("value");
-					var i2= d3.selectAll(".row"+t+" td:nth-child("+(i+1)+") input");
+					var i2= d3.selectAll("#"+matrixID+" .row"+t+" td:nth-child("+(i+1)+") input");
 					if (!i2.empty())
 						i2.property("value", v);				
 				}	
@@ -90,13 +93,14 @@ console.log("... done.")
 			.data(data.array)
 			.enter()
 			.append("td")
+			.attr("margin","5")
 			.attr("id", function(d) { return "cell_"+d.i+"_"+d.j })
 			.attr("class", function (d) {return "cell " + (d.label==null?"output":"input")})
 			.text(function(d){return d.label==null?"":d.label;})	
 			.filter(function(d){return d.label==null;})	
 			.append("input")	
-			.attr("id", function(d) { return "form_txt_matrix_"+d.i+"_"+d.j })
-			.attr("name", function(d) { return "form_txt_matrix_"+d.i+"_"+d.j })
+			.attr("id", function(d) { return "form_txt_"+matrixID+"_"+d.i+"_"+d.j })
+			.attr("name", function(d) { return "form_txt_"+matrixID+"_"+d.i+"_"+d.j })
 			.on("change", clearSolutionHighlight) //clearMatrixHighlights)
 			.on("keypress", clearSolutionHighlight) //() clearMatrixHighlights)
 			
@@ -106,6 +110,10 @@ console.log("... done.")
 			
 			tr
 				.append("td")
+				.attr("width", 0)
+				.attr("overflow","visible")
+				.append("div")
+				.attr("position","absolute")
 				.append("img")
 				.attr("width", 20)
 				.attr("height", 20)
