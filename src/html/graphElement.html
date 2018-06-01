@@ -60,8 +60,8 @@ var colorDim = d3.scaleLinear()
 var vertices = [];
 for (var i=0; i<n; i++) {
     vertices.push({i:i, 
-                   x:Math.random()*90+5, 
-                   y:Math.random()*90+5,
+                   x:random()*90+5, 
+                   y:random()*90+5,
                    label:(i in vertexLabel? vertexLabel[i] : ""),
                    select:false,
                    radius:4});

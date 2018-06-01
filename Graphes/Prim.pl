@@ -5,12 +5,22 @@ title=Algorithme de Prim
 template=/src/template/graphAndMatrix.pl
 
 text==
-Dans la matrice ci-dessous, saisir dans chaque ligne le tableau de distances calculé à chaque itération de l'algorithme de Prim, en utilisant le sommet A comme sommet de départ. En cas d'égalité, les sommets sont choisis par ordre alphabétique.
 
-Sélectionnez les arêtes de l'arbre couvrant correspondant. Vous pouvez sélectionner des sommets pour vous aider, ils ne seront pas comptabilisés.
 
-La ligne "0" correspond à l'initialisation.
-Utilisez le charactère "*" pour une valeur infinie.
+**Calcul d'un arbre couvrant de poids minimal en utilisant l'algorithme de Prim**
+
+Dans la matrice ci-dessous, saisir dans chaque ligne le tableau de distances calculé à chaque itération de l'algorithme de Prim, en utilisant le sommet A comme sommet de départ. 
+En cas d'égalité, les sommets sont choisis par ordre alphabétique.
+Dans le graphe, sélectionnez les arêtes données en sortie de l'algorithme.
+
+
+**Mode d'emploi**
+
+* La ligne **0** correspond à l'initialisation.
+* Utilisez le charactère ***** pour une valeur infinie.
+* Vous pouvez déplacer les sommets en les faisant glisser.
+* Cliquez sur une arête pour la (dé)sélectionner.
+* Pour vous aider, vous pouvez sélectionner un sommet en cliquant dessus, cette sélection n'est pas comptabilisée dans la solution.
 
 ==
 
@@ -40,3 +50,5 @@ print(mat)
 grade=evaluatePrim(sol, mat)
 
 ==
+
+

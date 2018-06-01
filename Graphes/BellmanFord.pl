@@ -1,14 +1,19 @@
 author = Laurent Bulteau
 name= Bellman Ford
-title=Bellman Ford
+title=Algorithme de Bellman Ford
 
 template=/src/template/graphAndMatrix.pl
 
 text==
-Dans la matrice ci-dessous, saisir dans chaque ligne le tableau de distances calculé à chaque itération de l'algorithme de Bellman-Ford (dans sa version de base), en utilisant le sommet A comme sommet de départ.
+**Calcul des plus courts chemins**
 
-La ligne "0" correspond à l'initialisation.
-Une case vide est comptée comme 0, utilisez le charactère "*" pour une valeur infinie.
+Dans la matrice ci-dessous, saisir dans chaque ligne le tableau de distances calculé à chaque itération de l'algorithme de Bellman-Ford (sans optimisation), en utilisant le sommet **A** comme sommet de départ.
+
+**Mode d'emploi**
+
+* La ligne **0** correspond à l'initialisation. 
+* Utilisez le charactère ***** pour une valeur infinie. 
+* Le bouton à la fin de chaque ligne permet de recopier la ligne précédente.
 ==
 
 directed=true
@@ -31,5 +36,10 @@ evaluator+=
 grade=evaluateBF(readSolution(), readIntMatrix(valueForBlank))
 
 ==
+
+
+
+
+
 
 

@@ -141,9 +141,25 @@ def generateRandomWeightedGraph(n, density, directed, minWeight, maxWeight, sour
 		v=random.randint(0,n-1)
 		if isNewEdge(e,u,v)  and ( directed or  isNewEdge(e,v,u)):
 			e=e+[[u,v, random.randint(minWeight, maxWeight)]]
-	print("Generated graph: ")
-	print(e)
+	print("Generated graph: "+str(e))
 	return str(e)	
+
+def boolean(s):
+	if (s=="true"):
+		return True
+	else :
+		return False
+	
+def generateEdgesFromParameters():
+	if 'edges' not in globals():
+		global edges
+		if boolean(weighted):		
+			edges=generateRandomWeightedGraph(int(graphSize), float(randomDensity), boolean(directed),int(minRandomWeight),int(maxRandomWeight), int(sourceVertex))
+		else:
+			edges=generateRandomGraph(int(graphSize), float(randomDensity), boolean(directed), int(sourceVertex))
+	else:
+		print("Input graph: " + str(edges))
+		
 
 def readSolution():
 	return parseSolution(response,globals())
